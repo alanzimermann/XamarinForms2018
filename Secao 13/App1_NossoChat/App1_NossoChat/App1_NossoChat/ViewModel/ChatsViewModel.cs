@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using App1_NossoChat.Model;
 using App1_NossoChat.Service;
 using Xamarin.Forms;
@@ -11,6 +12,28 @@ namespace App1_NossoChat.ViewModel
 {
     public class ChatsViewModel : INotifyPropertyChanged
     {
+        private bool _mensagemErro;
+        public bool MensagemErro
+        {
+            get { return _mensagemErro; }
+            set
+            {
+                _mensagemErro = value;
+                OnPropertyChanged("MensagemErro");
+            }
+        }
+
+        private bool _carregando;
+        public bool Carregando
+        {
+            get { return _carregando; }
+            set
+            {
+                _carregando = value;
+                OnPropertyChanged("Carregando");
+            }
+        }
+
         private Chat _SelectedItemChat;
         public Chat SelectedItemChat
         {
@@ -51,11 +74,27 @@ namespace App1_NossoChat.ViewModel
 
         public ChatsViewModel()
         {
-            Chats = ServiceWS.GetChats();
+            Task.Run(() => CarregarChats());
 
             AdicionarCommand = new Command(Adicionar);
             OrdenarCommand = new Command(Ordenar);
             AtualizarCommand = new Command(Atualizar);
+        }
+
+        private async Task CarregarChats()
+        {
+            try
+            {
+                MensagemErro = false;
+                Carregando = true;
+                Chats = await ServiceWS.GetChats();
+                Carregando = false;
+            }
+            catch (Exception e)
+            {
+                Carregando = false;
+                MensagemErro = true;                
+            }
         }
 
         private void Adicionar()
@@ -70,7 +109,7 @@ namespace App1_NossoChat.ViewModel
 
         private void Atualizar()
         {
-            Chats = ServiceWS.GetChats();
+            Task.Run(() => CarregarChats());
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

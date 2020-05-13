@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using App1_NossoChat.Model;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace App1_NossoChat.Service
 {
@@ -12,7 +13,7 @@ namespace App1_NossoChat.Service
     {
         private static string EnderecoBase = "http://ws.spacedu.com.br/xf2018/rest/api";
 
-        public static Usuario GetUsuario(Usuario usuario)
+        public async static Task<Usuario> GetUsuario(Usuario usuario)
         {
             var URL = EnderecoBase + "/usuario";
 
@@ -26,27 +27,27 @@ namespace App1_NossoChat.Service
             });
 
             HttpClient requisicao = new HttpClient();
-            HttpResponseMessage resposta = requisicao.PostAsync(URL, param).GetAwaiter().GetResult();
+            HttpResponseMessage resposta = await requisicao.PostAsync(URL, param);
 
             if (resposta.StatusCode == HttpStatusCode.OK)
             {
-                string conteudo = resposta.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                string conteudo = await resposta.Content.ReadAsStringAsync();
                 return JsonConvert.DeserializeObject<Usuario>(conteudo);
             }
 
             return null;
         }
 
-        public static List<Chat> GetChats()
+        public async static Task<List<Chat>> GetChats()
         {
             var URL = EnderecoBase + "/chats";
 
             HttpClient requisicao = new HttpClient();
-            HttpResponseMessage resposta = requisicao.GetAsync(URL).GetAwaiter().GetResult();
+            HttpResponseMessage resposta = await requisicao.GetAsync(URL);
 
             if (resposta.StatusCode == HttpStatusCode.OK)
             {
-                string conteudo = resposta.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                string conteudo = await resposta.Content.ReadAsStringAsync();
 
                 if (conteudo.Length > 2)
                 {
@@ -60,11 +61,11 @@ namespace App1_NossoChat.Service
             }
             else
             {
-                return null;
+                throw new Exception("Código de Erro HTTP: " + resposta.StatusCode);
             }
         }
 
-        public static bool InsertChat(Chat chat)
+        public static async Task<bool> InsertChat(Chat chat)
         {
             var URL = EnderecoBase + "/chat";
 
@@ -74,7 +75,7 @@ namespace App1_NossoChat.Service
             });
 
             HttpClient requisicao = new HttpClient();
-            HttpResponseMessage resposta = requisicao.PostAsync(URL, param).GetAwaiter().GetResult();
+            HttpResponseMessage resposta = await requisicao.PostAsync(URL, param);
 
             if (resposta.StatusCode == HttpStatusCode.OK)
             {
@@ -119,18 +120,18 @@ namespace App1_NossoChat.Service
             return false;
         }
 
-        public static List<Mensagem> GetMensagensChat(Chat chat)
+        public async static Task<List<Mensagem>> GetMensagensChat(Chat chat)
         {
             var URL = EnderecoBase + "/chat/" + chat.id + "/msg";
 
             HttpClient requisicao = new HttpClient();
-            HttpResponseMessage resposta = requisicao.GetAsync(URL).GetAwaiter().GetResult();
+            HttpResponseMessage resposta = await requisicao.GetAsync(URL);
 
             if (resposta.StatusCode == HttpStatusCode.OK)
             {
-                string conteudo = resposta.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                string conteudo = await resposta.Content.ReadAsStringAsync();
 
-                if (conteudo.Length > 2)
+                if (conteudo != null && conteudo.Length > 2)
                 {
                     List<Mensagem> lista = JsonConvert.DeserializeObject<List<Mensagem>>(conteudo);
                     return lista;
